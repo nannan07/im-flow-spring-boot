@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowInstanceMapper">
+	<resultMap id="BaseResultMap"
+		type="com.allmsi.flow.model.FlowInstance">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="flowId" property="flowId" jdbcType="VARCHAR" />
+		<result column="objectId" property="objectId"
+			jdbcType="VARCHAR" />
+		<result column="cTime" property="cTime" jdbcType="TIMESTAMP" />
+		<result column="cUserId" property="cUserId" jdbcType="VARCHAR" />
+		<result column="draft" property="draft" jdbcType="INTEGER" />
+
+		<result column="flowCode" property="flowCode"
+			jdbcType="VARCHAR" />
+		<result column="flowName" property="flowName"
+			jdbcType="VARCHAR" />
+		<result column="flowType" property="flowType"
+			jdbcType="VARCHAR" />
+		<result column="version" property="version" jdbcType="VARCHAR"/>
+
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="routeId" property="routeId" jdbcType="VARCHAR" />
+		<result column="nodeName" property="nodeName"
+			jdbcType="VARCHAR" />
+		<result column="routeName" property="routeName"
+			jdbcType="VARCHAR" />
+
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, flowId, objectId, cTime, cUserId,draft
+	</sql>
+	<delete id="deleteById"
+		parameterType="java.lang.String">
+		delete from im_tf_instance where id = #{id,jdbcType=VARCHAR}
+	</delete>
+	<select id="listInstanceByObjId" resultMap="BaseResultMap"
+		parameterType="java.lang.String">
+		select
+		<include refid="Base_Column_List" />
+		from im_tf_instance
+		where objectId = #{objectId,jdbcType=VARCHAR}
+	</select>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.String">
+		select
+		fi.id, fi.flowId, fi.objectId, fi.cTime, fi.cUserId,fi.draft,fb.flowCode,fb.version
+		from im_tf_instance fi
+		LEFT JOIN im_tf_base fb ON fi.flowId = fb.id
+		WHERE fb.del=0 and fi.id = #{id,jdbcType=VARCHAR}
+	</select>
+	<insert id="insertSelective"
+		parameterType="com.allmsi.flow.model.FlowInstance">
+		insert into im_tf_instance
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="flowId != null">
+				flowId,
+			</if>
+			<if test="objectId != null">
+				objectId,
+			</if>
+			<if test="cUserId != null">
+				cUserId,
+			</if>
+			<if test="draft != null">
+				draft,
+			</if>
+			cTime
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="flowId != null">
+				#{flowId,jdbcType=VARCHAR},
+			</if>
+			<if test="objectId != null">
+				#{objectId,jdbcType=VARCHAR},
+			</if>
+			<if test="cUserId != null">
+				#{cUserId,jdbcType=VARCHAR},
+			</if>
+			<if test="draft != null">
+				#{draft,jdbcType=INTEGER},
+			</if>
+			now()
+		</trim>
+	</insert>
+	<update id="updateDraft" parameterType="java.lang.String">
+		update im_tf_instance set draft = 1
+		where id = #{id,jdbcType=VARCHAR}
+	</update>
+</mapper>

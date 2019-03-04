@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.ModuleMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowModuleView">
+	    <result column="instanceId" property="instanceId" jdbcType="VARCHAR" />
+		<result column="objId" property="objId" jdbcType="VARCHAR" />
+		<result column="objName" property="objName" jdbcType="VARCHAR" />
+		<result column="handlerId" property="handlerId" jdbcType="VARCHAR" />
+		<result column="handlerName" property="handlerName" jdbcType="VARCHAR" />
+		<result column="handlerDeptId" property="handlerDeptId" jdbcType="VARCHAR" />
+		<result column="handlerDept" property="handlerDept" jdbcType="VARCHAR" />
+		<result column="objValue1" property="objValue1" jdbcType="VARCHAR" />
+		<result column="objValue2" property="objValue2" jdbcType="VARCHAR" />
+		<result column="objValue3" property="objValue3" jdbcType="VARCHAR" />
+		<result column="objValue4" property="objValue4" jdbcType="VARCHAR" />
+		<result column="objValue5" property="objValue5" jdbcType="VARCHAR" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+		<result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+	</resultMap>
+	<select id="allModuleList" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select DISTINCT a.instanceId,fm.objId,fm.objName,fm.handlerId,fm.handlerName,fm.handlerDeptId,fm.handlerDept,fm.objValue1,
+		fm.objValue2,fm.objValue3,fm.objValue4,fm.objValue5,fm.code,a.createTime
+        from (
+            select fi.objectId,fi.cTime AS createTime,fis.instanceId
+            from im_tf_instance_state fis
+            INNER JOIN im_tf_instance fi ON fi.id=fis.instanceId
+            INNER JOIN im_tf_base fb ON fb.id=fi.flowId AND fb.del=0
+            <where>
+                <if test="sufDealId != null and sufDealId != ''">
+			        fis.sufDealId= #{sufDealId}
+		        </if>
+		        <if test="flowCode != null and flowCode != ''">
+			        and INSTR(CONCAT(',',#{flowCode},','),CONCAT(',',fb.flowCode,','))
+		        </if>
+		    </where>
+            UNION ALL 
+            select fi.objectId,fi.cTime AS createTime,fil.instanceId
+            from im_tf_instance_log fil
+            INNER JOIN im_tf_instance fi ON fi.id=fil.instanceId
+            INNER JOIN im_tf_base fb ON fb.id=fi.flowId AND fb.del=0
+            <where>
+                <if test="sufDealId != null and sufDealId != ''">
+			        fil.sufDealId= #{sufDealId}
+		        </if>
+		        <if test="flowCode != null and flowCode != ''">
+			        and INSTR(CONCAT(',',#{flowCode},','),CONCAT(',',fb.flowCode,','))
+		        </if>
+		     </where>
+        )a
+        INNER JOIN im_vf_module fm ON fm.objId=a.objectId
+		<where>
+	        <if test="search != null and search != ''">
+				(fm.objName like CONCAT('%','${search}','%') OR
+				fm.handlerName like CONCAT('%','${search}','%') OR
+				fm.handlerDept like CONCAT('%','${search}','%'))
+			</if>
+		</where>
+		<choose>
+			<when test="orderField != null and orderField != ''">
+			      order by ${orderField} ${orderType}
+			</when>
+			<otherwise>
+			      order by a.createTime desc,fm.mcTime desc
+			</otherwise>
+		</choose>
+	</select>
+	<select id="getFlowModuleInfo" resultMap="BaseResultMap"
+		parameterType="java.lang.String">
+	select * from im_vf_module where objId = #{objId,jdbcType=VARCHAR}
+	</select>
+</mapper>

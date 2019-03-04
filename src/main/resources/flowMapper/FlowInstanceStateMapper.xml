@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowInstanceStateMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowInstanceState">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="stateId" property="stateId" jdbcType="VARCHAR" />
+		<result column="instanceId" property="instanceId" jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="routeId" property="routeId" jdbcType="VARCHAR" />
+		<result column="preDealId" property="preDealId" jdbcType="VARCHAR" />
+		<result column="sufDealId" property="sufDealId" jdbcType="VARCHAR" />
+		<result column="sufDealType" property="sufDealType" jdbcType="VARCHAR" />
+		<result column="sufAuthType" property="sufAuthType" jdbcType="VARCHAR" />
+		<result column="uTime" property="uTime" jdbcType="TIMESTAMP" />
+		<result column="uUserId" property="uUserId" jdbcType="VARCHAR" />
+		<result column="isProxy" property="isProxy" jdbcType="BIT" />
+		<result column="proxyId" property="proxyId" jdbcType="VARCHAR" />
+		<result column="opinion" property="opinion" jdbcType="VARCHAR" />
+		<result column="nodeName" property="nodeName" jdbcType="VARCHAR" />
+		<result column="nodeType" property="nodeType" jdbcType="VARCHAR" />
+		<result column="routeName" property="routeName" jdbcType="VARCHAR" />
+		<result column="isBack" property="isBack" jdbcType="BIT" />
+		<result column="isRecall" property="isRecall" jdbcType="BIT" />
+		<result column="objectId" property="objectId" jdbcType="VARCHAR" />
+		<result column="flowId" property="flowId" jdbcType="VARCHAR" />
+		<result column="flowCode" property="flowCode" jdbcType="VARCHAR" />
+		<result column="version" property="version" jdbcType="VARCHAR" />
+		<result column="sufId" property="sufId" jdbcType="VARCHAR" />
+		<result column="sufName" property="sufName" jdbcType="VARCHAR" />
+		<result column="sufDeptId" property="sufDeptId" jdbcType="VARCHAR" />
+		<result column="sufDeptName" property="sufDeptName" jdbcType="VARCHAR" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		fis.id, fis.instanceId, fis.nodeId, fis.routeId,fis.preDealId,
+		fis.sufDealId, fis.sufDealType, fis.sufAuthType,fis.uTime, 
+		fis.uUserId,fis.isProxy,fis.proxyId
+	</sql>
+	<delete id="deleteByInstenceId" parameterType="java.lang.String">
+		delete from
+		im_tf_instance_state where instanceId = #{instanceId,jdbcType=VARCHAR}
+	</delete>
+	<select id="getInstenceNow" resultMap="BaseResultMap"
+		parameterType="com.allmsi.flow.model.FlowInstanceState">
+		select fis.id, fis.instanceId, fis.nodeId, fis.routeId,
+		fis.preDealId,fis.sufDealId,fis.sufDealType,fis.sufAuthType,
+		fis.uTime,fis.isProxy,fis.proxyId,f.id as flowId,f.flowCode,f.version 
+		from im_tf_instance_state fis
+		INNER JOIN im_tf_instance fi ON fis.instanceId = fi.id
+		INNER JOIN im_tf_base f ON fi.flowId = f.id AND f.del = 0
+		where fi.id = #{instanceId,jdbcType=VARCHAR}
+		and fis.sufDealId = #{sufDealId,jdbcType=VARCHAR} and fis.sufDealType='01'
+		<if test="nodeId != null and nodeId != ''">
+			and fis.nodeId= #{nodeId,jdbcType=VARCHAR}
+		</if>
+		<if test="sufAuthType != null and sufAuthType != ''">
+			and fis.sufAuthType = #{sufAuthType,jdbcType=VARCHAR}
+		</if>
+		LIMIT 1
+	</select>
+	<select id="getByFis" resultMap="BaseResultMap"
+		parameterType="com.allmsi.flow.model.FlowInstanceState">
+		SELECT fis.id,fis.instanceId,fis.nodeId,fis.routeId,fis.preDealId,fis.sufDealId,
+		fis.sufDealType,fis.sufAuthType,fis.uTime,fis.uUserId,fis.isProxy,fis.proxyId,
+		fid.sufId,fid.sufName,fid.sufDeptId,fid.sufDeptName
+		FROM
+		im_tf_instance_state fis
+		LEFT JOIN
+		im_tf_instance_deal fid ON fis.id
+		=
+		fid.stateId
+		where 1=1
+		<if test="instanceId != null and instanceId != ''">
+			and fis.instanceId = #{instanceId,jdbcType=VARCHAR}
+		</if>
+		<if test="sufDealId != null and sufDealId != ''">
+			and fis.sufDealId = #{sufDealId,jdbcType=VARCHAR}
+		</if>
+		<if test="sufDealType != null and sufDealType != ''">
+			and fis.sufDealType = #{sufDealType,jdbcType=VARCHAR}
+		</if>
+		<if test="sufAuthType != null and sufAuthType != ''">
+			and fis.sufAuthType = #{sufAuthType,jdbcType=VARCHAR}
+		</if>
+		<if test="nodeId != null and nodeId != ''">
+			and fis.nodeId = #{nodeId,jdbcType=VARCHAR}
+		</if>
+		<if test="sufAuthType != null and sufAuthType != ''">
+			and fis.sufAuthType = #{sufAuthType,jdbcType=VARCHAR}
+		</if>
+	</select>
+	<select id="getInstenceStateInfo" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		SELECT fm.objId AS id,fr.isBack,fr.isRecall,a.flowId,f.flowCode,fn.nodeName,fn.nodeType,fr.routeName,a.stateId,a.instanceId,a.nodeId,a.preDealId,
+	    a.sufDealId,fid.sufName,fid.sufDeptId,fid.sufDeptName,a.sufDealType,a.sufAuthType,a.uTime,a.isProxy,a.proxyId,a.uUserId,a.routeId,a.objectId,fio.opinion,fm.code
+        FROM (
+		    SELECT fis.id as stateId,fi.id AS instanceId,fis.nodeId,fis.preDealId,fis.sufDealId,fis.sufDealType,
+			fis.sufAuthType,fis.uTime,fis.uUserId,fis.routeId,fis.isProxy,fis.proxyId,fi.objectId,fi.flowId
+		    FROM im_tf_instance fi
+		    LEFT JOIN im_tf_instance_state fis ON fi.id = fis.instanceId
+            WHERE fi.objectId = #{objId,jdbcType=VARCHAR} AND fis.sufDealId = #{sufDealId,jdbcType=VARCHAR} 
+            AND fis.sufDealType = #{sufDealType,jdbcType=VARCHAR} AND fis.sufAuthType = #{sufAuthType,jdbcType=VARCHAR}
+	    ) a
+        LEFT JOIN im_tf_node fn ON a.nodeId = fn.id AND fn.del = 0
+        LEFT JOIN im_tf_route fr ON a.routeId = fr.id AND fr.del = 0
+        LEFT JOIN im_tf_base f ON a.flowId = f.id AND f.del = 0
+        LEFT JOIN im_vf_module fm ON a.objectId = fm.objId
+        LEFT JOIN im_tf_instance_opinion fio ON a.stateId = fio.instanceLogId AND fio.del = 0
+        LEFT JOIN im_tf_instance_deal fid ON a.stateId = fid.stateId
+        ORDER BY uTime DESC LIMIT 1
+	</select>
+	<select id="sCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+	    select count(fm.objValue1)
+        from im_tf_instance_state fis
+        INNER JOIN im_tf_instance fi ON fi.id=fis.instanceId
+        INNER JOIN im_vf_module fm ON fm.objId=fi.objectId
+        WHERE fm.objValue1='S' and fis.sufAuthType='01' and fis.sufDealId= #{userId}
+	</select>
+	<insert id="insertBantch">
+		insert into im_tf_instance_state(id, instanceId, nodeId,
+		routeId,preDealId,sufDealId,sufDealType,
+		sufAuthType,uUserId,uTime,isProxy,proxyId)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.id},#{item.instanceId},#{item.nodeId},#{item.routeId},#{item.preDealId},
+			#{item.sufDealId},#{item.sufDealType},#{item.sufAuthType},#{item.uUserId},now(),#{item.isProxy},#{item.proxyId})
+		</foreach>
+	</insert>
+	<delete id="deleteBantch" parameterType="java.lang.String">
+		delete from
+		im_tf_instance_state where instanceId =
+		#{instanceId,jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteById" parameterType="java.lang.String">
+		delete from
+		im_tf_instance_state where id =
+		#{id,jdbcType=VARCHAR}
+	</delete>
+	<delete id="deleteBantchByFis"
+		parameterType="com.allmsi.flow.model.FlowInstanceState">
+		delete from im_tf_instance_state where instanceId =
+		#{instanceId,jdbcType=VARCHAR}
+		<if test="nodeId != null and nodeId != ''">
+			and nodeId = #{nodeId,jdbcType=VARCHAR}
+		</if>
+		<if test="sufDealId != null and sufDealId != ''">
+			and sufDealId = #{sufDealId,jdbcType=VARCHAR}
+		</if>
+		<if test="sufAuthType != null and sufAuthType != ''">
+			and sufAuthType = #{sufAuthType,jdbcType=VARCHAR}
+		</if>
+		<if test="sufDealType != null and sufDealType != ''">
+			and sufDealType = #{sufDealType,jdbcType=VARCHAR}
+		</if>
+		<if test="proxyId != null and proxyId != ''">
+			and proxyId = #{proxyId,jdbcType=VARCHAR}
+		</if>
+	</delete>
+	<select id="getInstenceStateDoneInfo" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		SELECT fm.objId as id,a.instanceId,a.objectId,GROUP_CONCAT(f.flowCode) AS flowCode,group_concat(fid.sufId) AS sufId,group_concat(fid.sufName) AS sufName,
+	    group_concat(fid.sufDeptId) AS sufDeptId,group_concat(fid.sufDeptName) AS sufDeptName,group_concat(a.nodeId) AS nodeId,max(a.uTime) AS uTime,
+        IF (group_concat(fn.nodeName) IS NULL,"结束",group_concat(fn.nodeName)) AS nodeName,
+        IF (group_concat(fn.nodeType) IS NULL,"02",group_concat(fn.nodeType)) AS nodeType,
+        group_concat(a.routeId) AS routeId,group_concat(fr.routeName) AS routeName,fm.code
+        FROM (
+		    SELECT fis.id,fi.id AS instanceId,fis.nodeId,fis.uTime,fis.routeId,fi.objectId,fi.flowId 
+		    FROM im_tf_instance fi
+		    LEFT JOIN (
+			     SELECT t.id,t.nodeId,t.instanceId,t.uTime,t.routeId
+			     FROM im_tf_instance_state t
+			     LEFT JOIN (
+				      SELECT MAX(id) AS id FROM im_tf_instance_state
+				      GROUP BY instanceId
+			     ) t1 ON t.id = t1.id
+			     WHERE t.sufAuthType = '01'
+		    ) fis ON fi.id = fis.instanceId
+		    WHERE fi.objectId = #{objId,jdbcType=VARCHAR} AND fi.draft = 1
+	    ) a
+        LEFT JOIN im_tf_node fn ON a.nodeId = fn.id AND fn.del = 0
+        LEFT JOIN im_tf_route fr ON a.routeId = fr.id AND fr.del = 0
+        LEFT JOIN im_tf_base f ON a.flowId = f.id AND f.del = 0
+        LEFT JOIN im_vf_module fm ON a.objectId = fm.objId
+        LEFT JOIN im_tf_instance_deal fid ON a.id = fid.stateId
+        GROUP BY fm.objId,a.instanceId,a.objectId,fm.code LIMIT 1
+	</select>
+	<delete id="deleteByIds" parameterType="java.util.List">
+		delete from
+		im_tf_instance_state where id in
+		<foreach collection="list" item="item" index="no" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	<select id="hasForInstanceIdAndNodeId"
+		resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT
+		count(tis.id)
+		FROM
+		im_tf_instance_state tis
+		INNER JOIN
+		im_tf_instance ti ON ti.id = tis.instanceId
+		INNER JOIN im_tf_node tn ON
+		tn.id = tis.nodeId
+		<where>
+			<if test="instanceId != null and instanceId != ''">
+				tis.instanceId = #{instanceId,jdbcType=VARCHAR}
+			</if>
+			<if test="nodeId != null and nodeId != ''">
+				AND tis.nodeId = #{nodeId,jdbcType=VARCHAR}
+			</if>
+			<if test="time != null and time != ''">
+				AND tis.uTime &gt;#{time,jdbcType=VARCHAR}
+			</if>
+			<if test="preDealId != null and preDealId != ''">
+				AND tis.preDealId = #{preDealId,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+	<select id="selectRouteListByInstanceId"
+		resultMap="BaseResultMap" parameterType="java.util.Map">
+		SELECT DISTINCT
+		tis.id,tis.instanceId,tis.nodeId,tis.routeId,tr.isRecall,tis.preDealId,tis.uTime
+		FROM
+		im_tf_instance_state tis
+		INNER JOIN im_tf_route tr ON tr.id =
+		tis.routeId
+		<where>
+			<if test="instanceId != null and instanceId != ''">
+				tis.instanceId = #{instanceId,jdbcType=VARCHAR}
+			</if>
+			<if test="preDealId != null and preDealId != ''">
+				AND tis.preDealId = #{preDealId,jdbcType=VARCHAR}
+			</if>
+		</where>
+	</select>
+	<update id="updateAuthType"
+		parameterType="java.util.Map">
+		update im_tf_instance_state set sufAuthType = #{sufAuthType,jdbcType=VARCHAR}
+		where instanceId = #{instanceId,jdbcType=VARCHAR} and nodeId = #{nodeId,jdbcType=VARCHAR}
+	</update>
+</mapper>

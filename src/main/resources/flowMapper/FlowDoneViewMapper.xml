@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowDoneViewMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowDoneView">
+	    <result column="id" property="id" jdbcType="VARCHAR" />
+		<result column="flowCode" property="flowCode" jdbcType="VARCHAR" />
+		<result column="instanceId" property="instanceId" jdbcType="VARCHAR" />
+		<result column="objId" property="objId" jdbcType="VARCHAR" />
+		<result column="objName" property="objName" jdbcType="VARCHAR" />
+		<result column="objValue1" property="objValue1" jdbcType="VARCHAR" />
+		<result column="objValue2" property="objValue2" jdbcType="VARCHAR" />
+		<result column="objValue3" property="objValue3" jdbcType="VARCHAR" />
+		<result column="objValue4" property="objValue4" jdbcType="VARCHAR" />
+		<result column="objValue5" property="objValue5" jdbcType="VARCHAR" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+		<result column="handlerName" property="handlerName" jdbcType="VARCHAR" />
+		<result column="handlerDept" property="handlerDept" jdbcType="VARCHAR" />
+		<result column="auditorId" property="auditorId" jdbcType="VARCHAR" />
+		<result column="auditorName" property="auditorName" jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="nodeName" property="nodeName" jdbcType="VARCHAR" />
+		<result column="dealTime" property="dealTime" jdbcType="TIMESTAMP" />
+		<result column="version" property="version" jdbcType="VARCHAR" />
+	</resultMap>
+	<select id="selectDoneList" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select fm.objId as id,v.flowCode,v.instanceId,fm.objId,fm.objName,fm.objValue1,fm.objValue2,fm.objValue3,fm.objValue4,fm.objValue5,
+		fm.code,fm.handlerName, fm.handlerDept,v.auditorId,v.auditorName,v.nodeId,v.nodeName,v.dealTime,v.version
+		from (
+			select a.instanceId,ee.auditorId,ee.auditorName,ee.nodeId,
+			IF(ISNULL(ee.nodeName),'流程结束',ee.nodeName) as nodeName,
+			IF(ISNULL(ee.uTime),a.dealTime,ee.uTime) AS dealTime,
+			a.objectId,a.flowCode,a.version
+			from(
+				select DISTINCT fil.instanceId,MAX(fil.dealTime) as dealTime,fi.objectId,fb.flowCode,fb.version
+				from im_tf_instance_log fil
+		        INNER JOIN im_tf_instance fi ON fi.id=fil.instanceId
+				INNER JOIN im_tf_base fb ON fb.id=fi.flowId and fb.del=0
+				WHERE fil.sufDealId= #{sufDealId} and fil.sufDealType = #{sufDealType}
+				<if test="sufAuthType != null and sufAuthType != ''">
+					and fil.sufAuthType = #{sufAuthType}
+				</if>
+				<if test="flowCode != null and flowCode != ''">
+					and INSTR(CONCAT(',',#{flowCode},','),CONCAT(',',fb.flowCode,','))
+				</if>
+				GROUP BY fil.instanceId
+			)a
+			LEFT JOIN (
+				select fis.instanceId,fis.nodeId,fn.nodeName,
+				CASE WHEN fn.nodeType = '26' THEN "" ELSE fis.sufId END as auditorId,
+				CASE WHEN fn.nodeType = '26' THEN "" ELSE fis.sufName END as auditorName,
+				fis.uTime
+				from (
+					SELECT a.instanceId,a.nodeId,MAX(a.uTime) as uTime, GROUP_CONCAT(fid.sufId) as sufId, GROUP_CONCAT(fid.sufName) as sufName
+					FROM im_tf_instance_state a 
+					INNER JOIN im_tf_instance_deal fid ON fid.stateId=a.id
+					WHERE a.sufAuthType = '01'
+					GROUP BY a.instanceId,a.nodeId
+					) fis
+				INNER JOIN im_tf_node fn ON fn.id=fis.nodeId and fn.del=0
+			)ee ON ee.instanceId=a.instanceId
+		)v
+		INNER JOIN im_vf_module fm ON fm.objId=v.objectId
+		<where>
+			<if test="search != null and search != ''">
+				(fm.objName like CONCAT('%','${search}','%') OR
+				fm.handlerName like CONCAT('%','${search}','%') OR
+				fm.handlerDept like CONCAT('%','${search}','%'))
+			</if>
+		</where>
+		<choose>
+			<when test="orderField != null and orderField != ''">
+			      order by ${orderField} ${orderType}
+			</when>
+			<otherwise>
+			      order by v.dealTime desc,fm.mcTime desc
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

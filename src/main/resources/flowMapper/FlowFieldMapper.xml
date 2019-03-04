@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowFieldMapper" >
+  <resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowField" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="flowId" property="flowId" jdbcType="VARCHAR" />
+    <result column="fieldName" property="fieldName" jdbcType="VARCHAR" />
+    <result column="cnName" property="cnName" jdbcType="VARCHAR" />
+    <result column="fieldTypeId" property="fieldTypeId" jdbcType="VARCHAR" />
+    <result column="fieldLength" property="fieldLength" jdbcType="INTEGER" />
+    <result column="point" property="point" jdbcType="TINYINT" />
+    <result column="fieldPropertyId" property="fieldPropertyId" jdbcType="VARCHAR" />
+    <result column="defaultValue" property="defaultValue" jdbcType="VARCHAR" />
+    <result column="typeName" property="typeName" jdbcType="VARCHAR" />
+    <result column="propertyName" property="propertyName" jdbcType="VARCHAR" />
+    <result column="del" property="del" jdbcType="TINYINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, flowId, fieldName, cnName, fieldTypeId, fieldLength, point, fieldPropertyId, 
+    defaultValue, del
+  </sql>
+  <select id="getFlowField" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from im_tf_base_field
+    where id = #{id,jdbcType=VARCHAR} and del=0 
+  </select>
+  <update id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    update im_tf_base_field set del=1
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <insert id="insert" parameterType="com.allmsi.flow.model.FlowField" >
+    insert into im_tf_base_field (id, flowId, fieldName, cnName, fieldTypeId, fieldLength, point, fieldPropertyId, defaultValue, del)
+    values (#{id,jdbcType=VARCHAR}, #{flowId,jdbcType=VARCHAR}, #{fieldName,jdbcType=VARCHAR},#{cnName,jdbcType=VARCHAR}, 
+      #{fieldTypeId,jdbcType=VARCHAR}, #{fieldLength,jdbcType=INTEGER},#{point,jdbcType=TINYINT}, #{fieldPropertyId,jdbcType=VARCHAR}, null, 0)
+  </insert>
+   <select id="getByFlowId" resultType="java.lang.String" parameterType="java.lang.String" >
+    select id from im_tf_base_field
+    where flowId = #{flowId,jdbcType=VARCHAR} and del=0 
+  </select>
+  <select id="listFlowField" resultMap="BaseResultMap" parameterType="java.util.Map">
+  SELECT a.fieldId,a.sort,bf.cnName,bf.fieldName,bf.fieldPropertyId,bfp.propertyName,bf.fieldLength,bf.fieldTypeId,bft.typeName,
+		CASE WHEN ISNULL(a.STATUS1) then a.STATUS
+			ELSE a.STATUS1 end as STATUS
+	FROM ( SELECT nf.fieldId, nf. STATUS, nf.sort, SUBSTRING_INDEX(GROUP_CONCAT(nfa. STATUS),',',1) AS STATUS1
+			FROM im_tf_node_field nf
+			LEFT JOIN im_tf_node_field_auth nfa ON nf.id = nfa.nodeFieldId
+			AND nf.del = 0 AND nfa.del = 0
+			<if test="authIdList != null">
+				AND nfa.authId IN
+				<foreach collection="authIdList" item="item" open="(" close=")" separator=",">
+		  			  #{item}
+		  		 </foreach>
+			</if>
+		WHERE nf.nodeId = #{nodeId,jdbcType=VARCHAR}
+		GROUP BY nf.fieldId, nf. STATUS, nf.sort
+	) a 
+	INNER JOIN im_tf_base_field bf ON a.fieldId = bf.id AND bf.del = 0
+	LEFT JOIN im_tf_base_field_property bfp ON bf.fieldPropertyId = bfp.id AND bfp.del = 0
+	LEFT JOIN im_tf_base_field_type bft ON bf.fieldTypeId = bft.id AND bft.del = 0
+	ORDER BY a.sort
+  </select>
+  
+</mapper>

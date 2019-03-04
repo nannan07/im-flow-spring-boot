@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowReadDealMapper">
+	<resultMap id="BaseResultMap"
+		type="com.allmsi.flow.model.FlowReadDeal">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="tab" property="tab" jdbcType="VARCHAR" />
+		<result column="tabId" property="tabId" jdbcType="VARCHAR" />
+		<result column="readId" property="readId" jdbcType="VARCHAR" />
+		<result column="readType" property="readType"
+			jdbcType="VARCHAR" />
+		<result column="del" property="del" jdbcType="BIT" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, tab, tabId, readId, readType
+	</sql>
+	<select id="listByTabIdAndTab" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select
+		<include refid="Base_Column_List" />
+		from im_tf_node_read_deal
+		where del=0
+		and tabId = #{tabId,jdbcType=VARCHAR}
+		<if test="tab != null and tab !=''">
+			and tab = #{tab,jdbcType=VARCHAR}
+		</if>
+	</select>
+</mapper>

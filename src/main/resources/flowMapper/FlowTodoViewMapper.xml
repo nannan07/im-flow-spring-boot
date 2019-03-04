@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowTodoViewMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowTodoView">
+		<result column="id" property="id" jdbcType="VARCHAR" />
+		<result column="stateId" property="stateId" jdbcType="VARCHAR" />
+		<result column="instanceId" property="instanceId" jdbcType="VARCHAR" />
+		<result column="objId" property="objId" jdbcType="VARCHAR" />
+		<result column="objName" property="objName" jdbcType="VARCHAR" />
+		<result column="handlerName" property="handlerName" jdbcType="VARCHAR" />
+		<result column="handlerDept" property="handlerDept" jdbcType="VARCHAR" />
+		<result column="objValue1" property="objValue1" jdbcType="VARCHAR" />
+		<result column="objValue2" property="objValue2" jdbcType="VARCHAR" />
+		<result column="objValue3" property="objValue3" jdbcType="VARCHAR" />
+		<result column="objValue4" property="objValue4" jdbcType="VARCHAR" />
+		<result column="objValue5" property="objValue5" jdbcType="VARCHAR" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="senderId" property="senderId" jdbcType="VARCHAR" />
+		<result column="senderName" property="senderName" jdbcType="VARCHAR" />
+		<result column="preDealDeptId" property="preDealDeptId" jdbcType="VARCHAR" />
+		<result column="preDealDeptName" property="preDealDeptName" jdbcType="VARCHAR" />
+		<result column="auditorId" property="auditorId" jdbcType="VARCHAR" />
+		<result column="auditorName" property="auditorName" jdbcType="VARCHAR" />
+		<result column="sufDealName" property="sufDealName" jdbcType="VARCHAR" />
+		<result column="sufDealDeptId" property="sufDealDeptId" jdbcType="VARCHAR" />
+		<result column="sufDealDeptName" property="sufDealDeptName" jdbcType="VARCHAR" />
+		<result column="sufAuthType" property="sufAuthType" jdbcType="VARCHAR" />
+		<result column="senderTime" property="senderTime" jdbcType="TIMESTAMP" />
+		<result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="flowCode" property="flowCode" jdbcType="VARCHAR" />
+		<result column="sort" property="sort" jdbcType="VARCHAR" />
+		<result column="version" property="version" jdbcType="VARCHAR" />
+	</resultMap>
+	<select id="selectTodoList" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select fm.objId AS id, a.stateId, a.instanceId, fm.objId, fm.objName, fm.handlerName, fm.handlerDept, fm.objValue1,
+		fm.objValue2, fm.objValue3, fm.objValue4, fm.objValue5, fm.code, a.nodeId, a.senderId, a.senderName, a.preDeptId,
+		a.preDeptName, a.auditorId, a.auditorName, a.sufDeptId, a.sufDeptName, a.sufAuthType, a.senderTime, a.createTime,
+        a.flowCode,a.version,IF(objValue1 = 'S','0','1') as sort 
+        from (
+            select fid.stateId, fis.preDealId as senderId, fid.preName as senderName, fis.instanceId,
+            fid.preDeptId, fid.preDeptName, fis.sufDealId as auditorId, fid.sufName as auditorName,
+            fid.sufDeptId, fid.sufDeptName, fis.sufAuthType, fis.sufDealType, fis.uTime as senderTime,
+            fi.cTime as createTime, fb.flowCode, fi.objectId, fis.nodeId,fb.version
+		    from im_tf_instance_state fis
+		    INNER JOIN im_tf_instance fi ON fis.instanceId = fi.id
+		    INNER JOIN im_tf_base fb ON fi.flowId = fb.id and fb.del= 0
+            INNER JOIN im_tf_instance_deal fid ON fis.id = fid.stateId
+		    where fis.sufDealId = #{auditorId} and fis.sufDealType = #{sufDealType}
+		    <if test="flowCode != null and flowCode != ''">
+			    AND INSTR(CONCAT(',',#{flowCode},','),CONCAT(',',fb.flowCode,','))
+		    </if>
+		    <if test="sufAuthType != null and sufAuthType != ''">
+			    AND fis.sufAuthType = #{sufAuthType}
+		    </if>
+	    )a
+		INNER JOIN im_vf_module fm ON fm.objId = a.objectId
+		<where>
+		<if test="search != null and search != ''">
+			( fm.objName like CONCAT('%','${search}','%') 
+			OR fm.handlerName like CONCAT('%','${search}','%') 
+			OR fm.handlerDept like CONCAT('%','${search}','%'))
+		</if>
+		</where>
+		<choose>
+			<when test="orderField != null and orderField != ''">
+			      order by ${orderField} ${orderType}
+			</when>
+			<otherwise>
+			      order by sort ASC,a.senderTime DESC,fm.mcTime desc
+			</otherwise>
+		</choose>
+	</select>
+	<select id="flowInstenceDept" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select * from (SELECT
+		aa.flowCode,
+		aa.handlerName,
+		aa.handlerDept,
+		aa.cTime
+		as uTime,
+		td.objId,td.objName,td.objValue1,td.objValue2,td.objValue3,td.objValue4,td.objValue5,
+		bb.sufId AS sufDealId,
+		bb.sufName AS sufDealName,
+		bb.nodeId,
+		IFNULL(bb.nodeName,"结束") as nodeName
+		FROM
+		(
+		SELECT
+		fi.id,
+		fi.objectId,
+		fi.flowId,
+		fi.cTime,
+		f.flowCode,
+		fid.preId,
+		fid.preName AS handlerName,
+		fid.preDeptId,
+		fid.preDeptName AS handlerDept
+		FROM
+		im_tf_instance fi
+		LEFT
+		JOIN im_tf_instance_deal fid ON fi.id = fid.stateId
+		LEFT
+		JOIN
+		im_tf_base
+		f ON fi.flowId = f.id AND f.del = 0
+		WHERE f.flowCode =
+		#{flowCode}
+		<if test="depts !=null">
+			AND fid.preDeptId IN
+			<foreach collection="depts" item="item" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		) aa
+		LEFT JOIN (select DISTINCT
+		objId,objName,objValue1,objValue2,objValue3,objValue4,objValue5 from
+		im_vf_module)td
+		ON aa.objectId = td.objId
+		LEFT JOIN ( SELECT
+		fis.instanceId, fd.sufId, fd.sufName, fd.sufDeptId,
+		fd.sufDeptName,fn.id as nodeId,fn.nodeName
+		FROM
+		im_tf_instance_state fis
+		LEFT JOIN im_tf_instance_deal fd ON
+		fis.id = fd.stateId
+		LEFT JOIN
+		im_tf_node fn ON fis.nodeId = fn.id
+		) bb ON aa.id = bb.instanceId) d
+		<if test="search != null and search != ''">
+			where d.objName like CONCAT('%','${search}','%') OR
+			d.handlerName like
+			CONCAT('%','${search}','%')
+		</if>
+		order by d.uTime desc
+	</select>
+</mapper>

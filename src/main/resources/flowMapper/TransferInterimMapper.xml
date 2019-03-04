@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.TransferInterimMapper">
+	<resultMap id="BaseResultMap"
+		type="com.allmsi.flow.model.TransferInterim">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="principal" property="principal"
+			jdbcType="VARCHAR" />
+		<result column="agent" property="agent" jdbcType="VARCHAR" />
+		<result column="flowCode" property="flowCode"
+			jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="startTime" property="startTime"
+			jdbcType="TIMESTAMP" />
+		<result column="endTime" property="endTime" jdbcType="TIMESTAMP" />
+		<result column="isRetain" property="isRetain" jdbcType="BIT" />
+		<result column="cUserId" property="cUserId" jdbcType="VARCHAR" />
+		<result column="cTime" property="cTime" jdbcType="TIMESTAMP" />
+		<result column="uUserId" property="uUserId" jdbcType="VARCHAR" />
+		<result column="uTime" property="uTime" jdbcType="TIMESTAMP" />
+		<result column="del" property="del" jdbcType="BIT" />
+	</resultMap>
+	<!-- id,principal,agent,flowCode,nodeId,startTime,endTime,isRetain,cUserId,cTime,uUserId,uTime,del -->
+	<insert id="insertSelective"
+		parameterType="com.allmsi.flow.model.TransferInterim">
+		insert into im_tf_transfer_interim
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="principal != null">
+				principal,
+			</if>
+			<if test="agent != null">
+				agent,
+			</if>
+			<if test="flowCode != null">
+				flowCode,
+			</if>
+			<if test="nodeId != null">
+				nodeId,
+			</if>
+			<if test="startTime != null">
+				startTime,
+			</if>
+			<if test="endTime != null">
+				endTime,
+			</if>
+			<if test="isRetain != null">
+				isRetain,
+			</if>
+			<if test="cUserId != null">
+				cUserId,
+			</if>
+			cTime,del
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="principal != null">
+				#{principal,jdbcType=VARCHAR},
+			</if>
+			<if test="agent != null">
+				#{agent,jdbcType=VARCHAR},
+			</if>
+			<if test="flowCode != null">
+				#{flowCode,jdbcType=VARCHAR},
+			</if>
+			<if test="nodeId != null">
+				#{nodeId,jdbcType=VARCHAR},
+			</if>
+			<if test="startTime != null">
+				#{startTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="endTime != null">
+				#{endTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="isRetain != null">
+				#{isRetain,jdbcType=BIT},
+			</if>
+			<if test="cUserId != null">
+				#{cUserId,jdbcType=VARCHAR},
+			</if>
+			now(),0
+		</trim>
+	</insert>
+	<update id='deleteByParemerKey' parameterType="java.util.Map">
+		update
+		im_tf_transfer_interim set del=1,uTime=now(),uUserId = #{uUserId,jdbcType=VARCHAR}
+		where id = #{id,jdbcType=VARCHAR}
+	</update>
+	<select id="listByPrincipal" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select
+		id,principal,agent,flowCode,nodeId,startTime,endTime,isRetain,cUserId,cTime,uUserId,uTime,del
+		from im_tf_transfer_interim
+		where del=0
+		<if test="flowCode != null and flowCode != ''">
+			and flowCode= #{flowCode,jdbcType=VARCHAR}
+		</if>
+		<if test="nodeId != null and nodeId != ''">
+			and nodeId = #{nodeId,jdbcType=VARCHAR}
+		</if>
+		<if test="isRetain != null and isRetain != ''">
+			and isRetain = #{isRetain,jdbcType=BIT}
+		</if>
+		<if test="principal != null and principal != ''">
+			and principal = #{principal,jdbcType=VARCHAR}
+		</if>
+		<if test="today != null">
+			and (#{today} between startTime and endTime)
+		</if>
+	</select>
+</mapper>

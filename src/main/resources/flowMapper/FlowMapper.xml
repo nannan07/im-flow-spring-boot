@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.Flow">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="flowCode" property="flowCode" jdbcType="VARCHAR" />
+		<result column="flowName" property="flowName" jdbcType="VARCHAR" />
+		<result column="flowType" property="flowType" jdbcType="VARCHAR" />
+		<result column="pId" property="pId" jdbcType="VARCHAR" />
+		<result column="del" property="del" jdbcType="BIT" />
+		<result column="version" property="version" jdbcType="VARCHAR"/>
+		
+	</resultMap>
+	<select id="getFlowIdByCode" resultType="java.lang.String"
+		parameterType="java.lang.String">
+		select id from im_tf_base
+		where del=0 and flowCode = #{flowCode,jdbcType=VARCHAR}
+	</select>
+	<select id="getFlowCodeById" resultType="java.lang.String"
+		parameterType="java.lang.String">
+		select flowCode from im_tf_base
+		where del=0 and id = #{id,jdbcType=VARCHAR}
+	</select>
+</mapper>

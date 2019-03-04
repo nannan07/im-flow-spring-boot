@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.TransferForeverMapper">
+	<resultMap id="BaseResultMap"
+		type="com.allmsi.flow.model.TransferForever">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="principal" property="principal"
+			jdbcType="VARCHAR" />
+		<result column="agent" property="agent" jdbcType="VARCHAR" />
+		<result column="flowCode" property="flowCode"
+			jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="isHisTransfer" property="isHisTransfer"
+			jdbcType="BIT" />
+		<result column="cUserId" property="cUserId" jdbcType="VARCHAR" />
+		<result column="cTime" property="cTime" jdbcType="TIMESTAMP" />
+	</resultMap>
+	<!-- id,principal,agent,flowCode,nodeId, isHisTransfer,cUserId,cTime-->
+	<insert id="insertSelective"
+		parameterType="com.allmsi.flow.model.TransferForever">
+		insert into im_tf_transfer_forever
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="principal != null">
+				principal,
+			</if>
+			<if test="agent != null">
+				agent,
+			</if>
+			<if test="flowCode != null">
+				flowCode,
+			</if>
+			<if test="nodeId != null">
+				nodeId,
+			</if>
+			<if test="isHisTransfer != null">
+				isHisTransfer,
+			</if>
+			<if test="cUserId != null">
+				cUserId,
+			</if>
+			cTime
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="principal != null">
+				#{principal,jdbcType=VARCHAR},
+			</if>
+			<if test="agent != null">
+				#{agent,jdbcType=VARCHAR},
+			</if>
+			<if test="flowCode != null">
+				#{flowCode,jdbcType=VARCHAR},
+			</if>
+			<if test="nodeId != null">
+				#{nodeId,jdbcType=VARCHAR},
+			</if>
+			<if test="isHisTransfer != null">
+				#{isHisTransfer,jdbcType=BIT},
+			</if>
+			<if test="cUserId != null">
+				#{cUserId,jdbcType=VARCHAR},
+			</if>
+			now()
+		</trim>
+	</insert>
+	<select id="listPrincipal" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select
+		id,principal,agent,flowCode,nodeId, isHisTransfer,cUserId,cTime
+		from im_tf_transfer_forever
+		where 1=1
+		<if test="flowCode != null and flowCode != ''">
+			and flowCode= #{flowCode,jdbcType=VARCHAR}
+		</if>
+		<if test="nodeId != null and nodeId != ''">
+			and nodeId = #{nodeId,jdbcType=VARCHAR}
+		</if>
+		<if test="isHisTransfer != null and isHisTransfer != ''">
+			and isHisTransfer = #{isHisTransfer,jdbcType=BIT}
+		</if>
+		<if test="principal != null and principal != ''">
+			and principal = #{principal,jdbcType=VARCHAR}
+		</if>
+	</select>
+</mapper>

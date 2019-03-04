@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowMySelfViewMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowMySelfView">
+		<result column="flowCode" property="flowCode" jdbcType="VARCHAR" />
+		<result column="id" property="id" jdbcType="VARCHAR" />
+		<result column="instanceId" property="instanceId" jdbcType="VARCHAR" />
+		<result column="objId" property="objId" jdbcType="VARCHAR" />
+		<result column="objName" property="objName" jdbcType="VARCHAR" />
+		<result column="handlerId" property="handlerId" jdbcType="VARCHAR" />
+		<result column="handlerName" property="handlerName" jdbcType="VARCHAR" />
+		<result column="handlerDeptId" property="handlerDeptId" jdbcType="VARCHAR" />
+		<result column="handlerDept" property="handlerDept" jdbcType="VARCHAR" />
+		<result column="objValue1" property="objValue1" jdbcType="VARCHAR" />
+		<result column="objValue2" property="objValue2" jdbcType="VARCHAR" />
+		<result column="objValue3" property="objValue3" jdbcType="VARCHAR" />
+		<result column="objValue4" property="objValue4" jdbcType="VARCHAR" />
+		<result column="objValue5" property="objValue5" jdbcType="VARCHAR" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+		<result column="auditorId" property="auditorId" jdbcType="VARCHAR" />
+		<result column="auditorName" property="auditorName" jdbcType="VARCHAR" />
+		<result column="sufDeptId" property="sufDeptId" jdbcType="VARCHAR" />
+		<result column="sufDeptName" property="sufDeptName" jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="nodeName" property="nodeName" jdbcType="VARCHAR" />
+		<result column="createTime" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="cUserId" property="cUserId" jdbcType="VARCHAR" />
+		<result column="version" property="version" jdbcType="VARCHAR" />
+	</resultMap>
+	<select id="selectMySelfList" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select v.flowCode,v.instanceId,fm.objId as id,fm.objId,fm.objName,fm.handlerId,fm.handlerName,fm.handlerDeptId,fm.handlerDept,
+		fm.objValue1,fm.objValue2,fm.objValue3,fm.objValue4,fm.objValue5,fm.code,v.auditorId,v.auditorName,v.sufDeptId,v.sufDeptName,
+		v.nodeId,v.nodeName,v.createTime,v.cUserId,v.version
+		from ( 
+		    select a.id,a.createTime,ee.auditorId,ee.auditorName,ee.nodeId,a.objectId,a.flowCode,a.cUserId,a.version,
+		    IF(ISNULL(ee.nodeName),'结束',ee.nodeName) AS nodeName,ee.sufDeptId,ee.sufDeptName,ee.instanceId
+		    from (
+		        select DISTINCT fi.id,fi.objectId,fb.flowCode,fi.cTime AS createTime,fi.cUserId,fb.version
+		        from im_tf_instance fi
+		        INNER JOIN im_tf_base fb ON fb.id=fi.flowId and fb.del=0
+		        WHERE fi.cUserId = #{cUserId}
+		    <if test="flowCode != null and flowCode != ''">
+			    AND INSTR(CONCAT(',',#{flowCode},','),CONCAT(',',fb.flowCode,','))
+		    </if>
+		    )a
+		    LEFT JOIN (
+				select fis.instanceId,fis.nodeId,fn.nodeName,
+				CASE WHEN fn.nodeType = '26' THEN "" ELSE fid.sufId END as auditorId,
+				CASE WHEN fn.nodeType = '26' THEN "" ELSE fid.sufName END as auditorName,
+				fis.uTime,fid.sufDeptId,fid.sufDeptName
+				from (
+					SELECT a.instanceId, MAX(a.id) as id,a.nodeId,MAX(a.uTime)  as uTime FROM im_tf_instance_state a
+					WHERE a.sufAuthType = '01'
+					GROUP BY a.instanceId,a.nodeId
+					) fis
+				INNER JOIN im_tf_node fn ON fn.id=fis.nodeId and fn.del=0
+				INNER JOIN im_tf_instance_deal fid ON fid.stateId=fis.id
+			)ee ON ee.instanceId=a.id
+		)v
+		INNER JOIN im_vf_module fm ON fm.objId=v.objectId
+		<where>
+			<if test="search != null and search != ''">
+				and fm.objName like CONCAT('%','${search}','%')
+			</if>
+		</where>
+		<choose>
+			<when test="orderField != null and orderField != ''">
+				order by ${orderField} ${orderType}
+			</when>
+			<otherwise>
+				order by v.createTime desc,fm.mcTime desc
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

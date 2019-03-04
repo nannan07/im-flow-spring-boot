@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowNodeButtonMapper" >
+  <resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowNodeButton" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+    <result column="buttonName" property="buttonName" jdbcType="VARCHAR" />
+    <result column="buttonType" property="buttonType" jdbcType="VARCHAR" />
+    <result column="sort" property="sort" jdbcType="INTEGER" />
+    <result column="del" property="del" jdbcType="BIT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, nodeId, buttonName, buttonType,sort
+  </sql>
+  <select id="listFlowNodeButton" resultMap="BaseResultMap" parameterType="java.lang.String">
+    select 
+    <include refid="Base_Column_List" />
+    from im_tf_node_button
+    where nodeId = #{nodeId,jdbcType=VARCHAR} and del = 0
+    order by sort
+  </select>
+</mapper>

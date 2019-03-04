@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowFieldTypeMapper" >
+  <resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowFieldType" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="typeName" property="typeName" jdbcType="VARCHAR" />
+    <result column="del" property="del" jdbcType="TINYINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, typeName, del
+  </sql>
+  <select id="getFlowFieldType" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from im_tf_base_field_type
+    where id = #{id,jdbcType=VARCHAR} and del=0
+  </select>
+  <update id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    update im_tf_base_field_type set del=1
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

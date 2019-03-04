@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowInstanceLogMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowInstanceLog">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="instanceId" property="instanceId" jdbcType="VARCHAR" />
+		<result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+		<result column="routeId" property="routeId" jdbcType="VARCHAR" />
+		<result column="preDealId" property="preDealId" jdbcType="VARCHAR" />
+		<result column="sufDealId" property="sufDealId" jdbcType="VARCHAR" />
+		<result column="sufDealType" property="sufDealType" jdbcType="VARCHAR" />
+		<result column="sufAuthType" property="sufAuthType" jdbcType="VARCHAR" />
+		<result column="remark" property="remark" jdbcType="VARCHAR" />
+		<result column="dealState" property="dealState" jdbcType="VARCHAR" />
+		<result column="cTime" property="cTime" jdbcType="TIMESTAMP" />
+		<result column="dealTime" property="dealTime" jdbcType="TIMESTAMP" />
+		<result column="cUserId" property="cUserId" jdbcType="VARCHAR" />
+		<result column="opinion" property="opinion" jdbcType="VARCHAR" />
+		<result column="isProxy" property="isProxy" jdbcType="BIT" />
+		<result column="proxyId" property="proxyId" jdbcType="VARCHAR" />
+		
+		<result column="nodeName" property="nodeName" jdbcType="VARCHAR" />
+		<result column="nodeType" property="nodeType" jdbcType="VARCHAR" />
+		<result column="flowCode" property="flowCode" jdbcType="VARCHAR" />
+		<result column="sufDealDeptId" property="sufDealDeptId" jdbcType="VARCHAR" />
+		<result column="sufDealDeptName" property="sufDealDeptName" jdbcType="VARCHAR" />
+		<result column="sufDealName" property="sufDealName" jdbcType="VARCHAR" />
+		<result column="objId" property="objId" jdbcType="VARCHAR" />
+		<result column="objName" property="objName" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, instanceId, remark, cTime, cUserId
+	</sql>
+	<delete id="deleteByInstenceId" parameterType="java.lang.String">
+		delete from
+		im_tf_instance_log where instanceId = #{instanceId,jdbcType=VARCHAR}
+	</delete>
+	<insert id="insertSelective"
+		parameterType="com.allmsi.flow.model.FlowInstanceLog">
+		insert into im_tf_instance_log
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="instanceId != null">
+				instanceId,
+			</if>
+			<if test="nodeId != null">
+				nodeId,
+			</if>
+			<if test="routeId != null">
+				routeId,
+			</if>
+			<if test="preDealId != null">
+				preDealId,
+			</if>
+			<if test="sufDealId != null">
+				sufDealId,
+			</if>
+			<if test="sufDealType != null">
+				sufDealType,
+			</if>
+			<if test="sufAuthType != null">
+				sufAuthType,
+			</if>
+			<if test="remark != null">
+				remark,
+			</if>
+			<if test="dealState != null">
+				dealState,
+			</if>
+			<if test="cUserId != null">
+				cUserId,
+			</if>
+			<if test="cTime != null">
+				cTime,
+			</if>
+			<if test="isProxy != null">
+				isProxy,
+			</if>
+			<if test="proxyId != null">
+				proxyId,
+			</if>
+			dealTime
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="instanceId != null">
+				#{instanceId,jdbcType=VARCHAR},
+			</if>
+			<if test="nodeId != null">
+				#{nodeId,jdbcType=VARCHAR},
+			</if>
+			<if test="routeId != null">
+				#{routeId,jdbcType=VARCHAR},
+			</if>
+			<if test="preDealId != null">
+				#{preDealId,jdbcType=VARCHAR},
+			</if>
+			<if test="sufDealId != null">
+				#{sufDealId,jdbcType=VARCHAR},
+			</if>
+			<if test="sufDealType != null">
+				#{sufDealType,jdbcType=VARCHAR},
+			</if>
+			<if test="sufAuthType != null">
+				#{sufAuthType,jdbcType=VARCHAR},
+			</if>
+			<if test="remark != null">
+				#{remark,jdbcType=VARCHAR},
+			</if>
+			<if test="dealState != null">
+				#{dealState,jdbcType=VARCHAR},
+			</if>
+			<if test="cUserId != null">
+				#{cUserId,jdbcType=VARCHAR},
+			</if>
+			<if test="cTime != null">
+				#{cTime,jdbcType=VARCHAR},
+			</if>
+			<if test="isProxy != null">
+				#{isProxy,jdbcType=BIT},
+			</if>
+			<if test="proxyId != null">
+				#{proxyId,jdbcType=VARCHAR},
+			</if>
+			now()
+		</trim>
+	</insert>
+	<select id="listInstenceStateLog" resultMap="BaseResultMap"
+		parameterType="java.lang.String">
+		 select a.id,a.instanceId,a.dealTime,a.dealState,a.opinion,
+        case WHEN a.dealState = '21' THEN "" ELSE a.sufName END AS sufDealName,
+        a.nodeId,fn.nodeType
+		from(
+		    select MAX(fis.id) as id , fis.instanceId,now() AS dealTime,
+			case WHEN n.nodeType = '26' THEN "21" ELSE '04' END as dealState, '' AS opinion,fis.nodeId,
+			GROUP_CONCAT(fid.sufName) as sufName, 2 as sort
+            from im_tf_instance_state fis
+			LEFT JOIN im_tf_node n ON fis.nodeId = n.id AND n.del = 0
+			LEFT JOIN im_tf_instance_deal fid ON fid.stateId=fis.id 
+            WHERE fis.instanceId =  #{instanceId,jdbcType=VARCHAR} AND fis.sufAuthType='01' 
+			GROUP BY fis.instanceId,dealTime,dealState,opinion,fis.nodeId
+			
+            UNION ALL 
+            select fil.id,fil.instanceId,fil.dealTime,fil.dealState,fio.opinion,fil.nodeId,fid.sufName,1 as sort
+            from im_tf_instance_log fil
+            LEFT JOIN im_tf_instance_opinion fio ON fio.instanceLogId=fil.id AND fio.del=0
+			LEFT JOIN im_tf_instance_deal fid ON fid.stateId=fil.id 
+            where fil.instanceId= #{instanceId,jdbcType=VARCHAR}
+            AND (fil.sufAuthType is null OR fil.sufAuthType='01')
+        )a
+        LEFT JOIN im_tf_node fn ON a.nodeId = fn.id AND fn.del = 0
+        ORDER BY a.sort,a.dealTime
+		<!--  select a.id,a.instanceId,a.dealTime,a.dealState,a.opinion,
+        case WHEN a.dealState = '10' THEN "" ELSE a.sufName END AS sufDealName,
+        a.nodeId
+		from(
+		
+		    select MAX(fis.id) as id , fis.instanceId,now() AS dealTime,
+			case WHEN n.nodeType = '26' THEN "20" ELSE '04' END as dealState, '' AS opinion,fis.nodeId,
+			GROUP_CONCAT(fid.sufName) as sufName
+            from im_tf_instance_state fis
+			LEFT JOIN im_tf_node n ON fis.nodeId = n.id AND n.del = 0
+			LEFT JOIN im_tf_instance_deal fid ON fid.stateId=fis.id 
+            WHERE fis.instanceId = #{instanceId,jdbcType=VARCHAR} AND fis.sufAuthType='01' 
+			GROUP BY fis.instanceId,dealTime,dealState,opinion,fis.nodeId
+			
+			
+            UNION ALL 
+            select fil.id,fil.instanceId,fil.dealTime,fil.dealState,fio.opinion,fil.nodeId,fid.sufName
+            from im_tf_instance_log fil
+            LEFT JOIN im_tf_instance_opinion fio ON fio.instanceLogId=fil.id AND fio.del=0
+			LEFT JOIN (select instanceId,nodeId,MAX(id) as id from im_tf_instance_state  
+					WHERE sufAuthType = '01'
+					GROUP BY instanceId,nodeId
+			) fis ON fil.instanceId = fis.instanceId AND fil.nodeId = fis.nodeId
+			LEFT JOIN im_tf_node n ON fil.nodeId = n.id AND n.del = 0
+			LEFT JOIN im_tf_instance_deal fid ON fid.stateId=fil.id 
+            where fil.instanceId=#{instanceId,jdbcType=VARCHAR}
+            AND (fil.sufAuthType is null OR fil.sufAuthType='01') AND n.nodeType != '26'
+            
+         
+			UNION ALL 
+			SELECT b.id,b.instanceId,any_value(b.dealTime) as dealTime, 
+			CASE WHEN any_value(b.dealState) = '02' THEN "21"
+				ELSE "22" END as dealState, '' as opinion ,b.nodeId,'' as sufName
+			FROM (
+					SELECT max(fil.id) as id,fil.instanceId, fil.dealState, fil.nodeId, count(fil.id) AS count, max(dealTime) AS dealTime
+					FROM im_tf_instance_log fil
+					LEFT JOIN (
+						SELECT instanceId, nodeId, MAX(id) AS id FROM im_tf_instance_state
+						WHERE sufAuthType = '01'
+						GROUP BY instanceId, nodeId
+					) fis ON fil.instanceId = fis.instanceId AND fil.nodeId = fis.nodeId
+					LEFT JOIN im_tf_node n ON fil.nodeId = n.id AND n.del = 0
+					WHERE fil.instanceId =#{instanceId,jdbcType=VARCHAR}
+					AND ( fil.sufAuthType IS NULL OR fil.sufAuthType = '01' )
+					AND fis.id IS NULL AND n.nodeType = '26'
+					GROUP BY fil.instanceId, fil.dealState, fil.nodeId
+					ORDER BY count desc
+				) b
+			GROUP BY b.nodeId,b.instanceId
+        )a
+        LEFT JOIN im_tf_instance_deal fid ON fid.stateId=a.id 
+        ORDER BY a.dealTime -->
+	</select>
+	<select id="isFinsh" resultType="java.lang.Integer"
+		parameterType="java.lang.String">
+		select count(fil.id) from im_tf_instance_log fil
+		INNER
+		JOIN im_tf_instance fi ON fil.instanceId = fi.id
+		INNER JOIN
+		im_tf_node
+		fn ON fil.nodeId = fn.id
+		WHERE fi.objectId =
+		#{objectId,jdbcType=VARCHAR} AND fn.nodeType='02'
+	</select>
+	<select id="doneFlow" resultMap="BaseResultMap"
+		parameterType="java.util.List">
+		select DISTINCT fi.objectId as objId from im_tf_instance_log fil
+		INNER
+		JOIN im_tf_instance fi ON fil.instanceId = fi.id
+		INNER JOIN im_tf_node
+		fn ON fil.nodeId = fn.id
+		WHERE fn.nodeType ='02' and fi.objectId in
+		<foreach collection="list" index="index" item="item" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<insert id="insertBantch">
+		insert into im_tf_instance_log(id, instanceId, nodeId,
+		routeId,preDealId,sufDealId,sufDealType,
+		sufAuthType,cUserId,cTime,dealTime,isProxy,proxyId)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.id},#{item.instanceId},#{item.nodeId},#{item.routeId},#{item.preDealId},
+			#{item.sufDealId},#{item.sufDealType},#{item.sufAuthType},#{item.cUserId},#{item.cTime},now(),isProxy,proxyId)
+		</foreach>
+	</insert>
+	<select id="getDoneInfo" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		SELECT DISTINCT
+		til.id,til.instanceId,til.nodeId,til.sufDealId,til.routeId,til.sufDealId,til.dealTime
+		FROM
+		im_tf_instance_log til
+		<where>
+			<if test="instanceId != null and instanceId != ''">
+				til.instanceId = #{instanceId,jdbcType=VARCHAR}
+			</if>
+			<if test="nodeId != null and nodeId != ''">
+				AND til.nodeId = #{nodeId,jdbcType=VARCHAR}
+			</if>
+			<if test="sufDealId != null and sufDealId != ''">
+				AND til.sufDealId = #{sufDealId,jdbcType=VARCHAR}
+			</if>
+		</where>
+		ORDER BY til.dealTime DESC LIMIT 1
+	</select>
+	<select id="listDealState" resultType="java.lang.String" parameterType="java.util.Map">
+	select dealState from im_tf_instance_log 
+		where instanceId= #{instanceId,jdbcType=VARCHAR} 
+			<if test="nodeId != null and nodeId != ''">
+				AND nodeId = #{nodeId,jdbcType=VARCHAR}
+			</if>
+			<if test="sufDealId != null and sufDealId != ''">
+				AND sufDealId = #{sufDealId,jdbcType=VARCHAR}
+			</if>
+		order by dealTime desc
+	</select>
+	<select id="listVoteDealState" resultType="java.lang.String" parameterType="java.util.Map">
+	select dealState from im_tf_instance_log fil
+		INNER JOIN (
+		select cTime from im_tf_instance_log 
+			where instanceId = #{instanceId,jdbcType=VARCHAR}
+		AND nodeId = #{nodeId,jdbcType=VARCHAR}
+		GROUP BY cTime
+		ORDER BY cTime desc limit 1) a ON fil.cTime = a.cTime
+		WHERE instanceId = #{instanceId,jdbcType=VARCHAR}
+		AND nodeId = #{nodeId,jdbcType=VARCHAR}
+	</select>
+	<update id="updateDeatState" parameterType="java.util.Map">
+	    update im_tf_instance_log SET dealState = #{dealState,jdbcType=VARCHAR}
+        WHERE instanceId = #{instanceId,jdbcType=VARCHAR} 
+        AND nodeId = #{nodeId,jdbcType=VARCHAR} 
+        AND sufDealId = #{sufDealId,jdbcType=VARCHAR}
+	</update>
+	<select id="listVote" resultMap="BaseResultMap" parameterType="java.lang.String">
+		select b.id,b.instanceId,b.sufDealId,fid.sufName,fid.sufDeptName,
+		b.cTime,b.dealTime, b.dealState,fio.opinion 
+		from im_tf_instance_log a
+		left join im_tf_instance_log b ON a.instanceId = b.instanceId AND a.nodeId = b.nodeId AND a.routeId = b.routeId AND a.cTime = b.cTime
+		LEFT JOIN im_tf_instance_opinion fio ON b.id = fio.instanceLogId AND fio.del = 0
+		LEFT JOIN im_tf_instance_deal fid ON b.id = fid.stateId
+		WHERE a.id=#{id,jdbcType=VARCHAR} 
+	</select>
+</mapper>

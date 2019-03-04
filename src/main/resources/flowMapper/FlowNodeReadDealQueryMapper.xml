@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowNodeReadDealQueryMapper" >
+  <resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowNodeReadDealQuery" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="readDealId" property="readDealId" jdbcType="VARCHAR" />
+    <result column="queryName" property="queryName" jdbcType="VARCHAR" />
+    <result column="queryValue" property="queryValue" jdbcType="VARCHAR" />
+    <result column="queryGroup" property="queryGroup" jdbcType="VARCHAR" />
+    <result column="del" property="del" jdbcType="TINYINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, readDealId, queryName, queryValue, queryGroup, del
+  </sql>
+  <select id="queryList" resultType="java.lang.String" parameterType="java.lang.String" >
+    select CONCAT("{",b.query,"}") as query from
+    (select GROUP_CONCAT(a.query) as query from
+    (select CONCAT('"',queryName,'"',":",'"',queryValue,'"') as query,queryGroup
+    from im_tf_node_read_deal_query where readDealId= #{id,jdbcType=VARCHAR} and del=0
+    )a
+    GROUP BY a.queryGroup
+    )b
+  </select>
+  
+</mapper>

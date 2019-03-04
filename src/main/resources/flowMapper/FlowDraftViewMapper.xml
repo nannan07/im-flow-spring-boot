@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowDraftViewMapper">
+	<resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowDraftView">
+		<result column="id" property="id" jdbcType="VARCHAR" />
+		<result column="objId" property="objId" jdbcType="VARCHAR" />
+		<result column="objName" property="objName" jdbcType="VARCHAR" />
+		<result column="handlerId" property="handlerId" jdbcType="VARCHAR" />
+		<result column="handlerName" property="handlerName" jdbcType="VARCHAR" />
+		<result column="handlerDeptId" property="handlerDeptId" jdbcType="VARCHAR" />
+		<result column="handlerDept" property="handlerDept" jdbcType="VARCHAR" />
+		<result column="objValue1" property="objValue1" jdbcType="VARCHAR" />
+		<result column="objValue2" property="objValue2" jdbcType="VARCHAR" />
+		<result column="objValue3" property="objValue3" jdbcType="VARCHAR" />
+		<result column="objValue4" property="objValue4" jdbcType="VARCHAR" />
+		<result column="objValue5" property="objValue5" jdbcType="VARCHAR" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+		<result column="mcTime" property="mcTime" jdbcType="TIMESTAMP" />
+	</resultMap>
+
+	<select id="selectFlowDraft" resultMap="BaseResultMap"
+		parameterType="java.util.Map">
+		select fm.objId as id,fm.objId,fm.objName,fm.handlerName,fm.handlerDept,fm.objValue1,fm.objValue2,fm.objValue3,fm.mcTime,objValue4,fm.objValue5,fm.code 
+		from im_vf_module fm
+        LEFT JOIN im_tf_instance fi ON fi.objectId=fm.objId 
+        LEFT JOIN im_tf_base fb ON fb.id=fi.flowId AND fb.del=0 
+		where fm.handlerId= #{cUserId} AND fi.id IS NULL
+		<if test="flowCode != null and flowCode != ''">
+			AND INSTR(CONCAT(',',#{flowCode},','),CONCAT(',',fm.code,','))
+		</if>
+		<if test="search != null and search != ''">
+			and (fm.objName like CONCAT('%','${search}','%') OR
+				fm.handlerName like CONCAT('%','${search}','%') OR
+				fm.handlerDept like CONCAT('%','${search}','%'))
+		</if>
+		<choose>
+			<when test="orderField != null and orderField != ''">
+			      order by ${orderField} ${orderType}
+			</when>
+			<otherwise>
+			      order by fm.mcTime desc,fm.objName desc
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

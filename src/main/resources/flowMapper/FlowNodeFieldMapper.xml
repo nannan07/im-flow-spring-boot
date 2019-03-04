@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowNodeFieldMapper" >
+  <resultMap id="BaseResultMap" type="com.allmsi.flow.model.FlowNodeField" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="nodeId" property="nodeId" jdbcType="VARCHAR" />
+    <result column="fieldId" property="fieldId" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+     <result column="sort" property="sort" jdbcType="TINYINT" />
+    <result column="del" property="del" jdbcType="TINYINT" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, nodeId, fieldId, status, sort, del
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from im_tf_node_field
+    where id = #{id,jdbcType=VARCHAR} and del=0
+  </select>
+  <select id="listNodeField" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from im_tf_node_field
+    where nodeId = #{nodeId,jdbcType=VARCHAR} and del=0
+    order by sort asc
+  </select>
+  <update id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    update im_tf_node_field set del=1
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

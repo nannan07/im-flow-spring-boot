@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.allmsi.flow.dao.FlowInstanceDealMapper">
+	<resultMap id="BaseResultMap"
+		type="com.allmsi.flow.model.FlowInstanceDeal">
+		<id column="id" property="id" jdbcType="VARCHAR" />
+		<result column="stateId" property="stateId" jdbcType="VARCHAR" />
+		<result column="preId" property="preId" jdbcType="VARCHAR" />
+		<result column="preName" property="preName" jdbcType="VARCHAR" />
+		<result column="preDeptId" property="preDeptId"
+			jdbcType="VARCHAR" />
+		<result column="preDeptName" property="preDeptName"
+			jdbcType="VARCHAR" />
+		<result column="sufId" property="sufId" jdbcType="VARCHAR" />
+		<result column="sufName" property="sufName" jdbcType="VARCHAR" />
+		<result column="sufDeptId" property="sufDeptId"
+			jdbcType="VARCHAR" />
+		<result column="sufDeptName" property="sufDeptName"
+			jdbcType="VARCHAR" />
+
+		<result column="flowId" property="flowId" jdbcType="VARCHAR" />
+		<result column="preRouteId" property="preRouteId"
+			jdbcType="VARCHAR" />
+		<result column="preRouteName" property="preRouteName"
+			jdbcType="VARCHAR" />
+		<result column="preRouteIsBack" property="preRouteIsBack"
+			jdbcType="INTEGER" />
+		<result column="routeDealType" property="routeDealType"
+			jdbcType="VARCHAR" />
+		<result column="query" property="query" jdbcType="VARCHAR" />
+
+		<result column="preNodeId" property="preNodeId"
+			jdbcType="VARCHAR" />
+		<result column="preNodeName" property="preNodeName"
+			jdbcType="VARCHAR" />
+		<result column="preNodeType" property="preNodeType"
+			jdbcType="VARCHAR" />
+		<result column="sufNodeId" property="sufNodeId"
+			jdbcType="VARCHAR" />
+		<result column="sufNodeName" property="sufNodeName"
+			jdbcType="VARCHAR" />
+		<result column="sufNodeType" property="sufNodeType"
+			jdbcType="VARCHAR" />
+
+		<result column="uTime" property="uTime" jdbcType="TIMESTAMP" />
+
+	</resultMap>
+	<delete id="deleteByInstenceId" parameterType="java.lang.String">
+		delete from
+		im_tf_instance_deal where stateId = #{stateId,jdbcType=VARCHAR}
+	</delete>
+	<insert id="insertSelective"
+		parameterType="com.allmsi.flow.model.FlowInstanceDeal">
+		insert into im_tf_instance_deal
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="stateId != null">
+				stateId,
+			</if>
+			<if test="preId != null">
+				preId,
+			</if>
+			<if test="preName != null">
+				preName,
+			</if>
+			<if test="preDeptId != null">
+				preDeptId,
+			</if>
+
+			<if test="preDeptName != null">
+				preDeptName,
+			</if>
+			<if test="sufId != null">
+				sufId,
+			</if>
+			<if test="sufName != null">
+				sufName,
+			</if>
+			<if test="sufDeptId != null">
+				sufDeptId,
+			</if>
+			<if test="sufDeptName != null">
+				sufDeptName,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="stateId != null">
+				#{stateId,jdbcType=VARCHAR},
+			</if>
+			<if test="preId != null">
+				#{preId,jdbcType=VARCHAR},
+			</if>
+			<if test="preName != null">
+				#{preName,jdbcType=VARCHAR},
+			</if>
+			<if test="preDeptId != null">
+				#{preDeptId,jdbcType=VARCHAR},
+			</if>
+			<if test="preDeptName != null">
+				#{preDeptName,jdbcType=VARCHAR},
+			</if>
+			<if test="sufId != null">
+				#{sufId,jdbcType=VARCHAR},
+			</if>
+			<if test="sufName != null">
+				#{sufName,jdbcType=VARCHAR},
+			</if>
+			<if test="sufDeptId != null">
+				#{sufDeptId,jdbcType=VARCHAR},
+			</if>
+			<if test="sufDeptName != null">
+				#{sufDeptName,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<insert id="insertBatch" parameterType="java.util.List">
+		insert into im_tf_instance_deal
+		(id,stateId,preId,preName,preDeptId,preDeptName,sufId,sufName,sufDeptId,sufDeptName)
+		VALUES
+		<foreach collection="list" item="item" separator=",">
+			(#{item.id},#{item.stateId},#{item.preId},#{item.preName},#{item.preDeptId},
+			#{item.preDeptName},#{item.sufId},#{item.sufName},#{item.sufDeptId},#{item.sufDeptName}
+			)
+		</foreach>
+	</insert>
+	<select id="getPreDealUserForNodeId"
+		resultMap="BaseResultMap" parameterType="java.util.Map">
+		SELECT
+		a.flowId,
+		a.routeId as
+		preRouteId,
+		a.routeName as preRouteName,
+		a.sufNode AS preNodeId,
+		fn1.nodeName as preNodeName,
+		fn1.nodeType as preNodeType,
+		a.preNode as
+		sufNodeId,
+		fn.nodeName as
+		sufNodeName,
+		fn.nodeType as sufNodeType,
+		a.isBack as preRouteIsBack,
+		IF(a.preId is NULL,a.sufId,a.preId) as
+		preId,
+		IF(a.preName is NULL,a.sufName,a.preName) as preName,
+		IF(a.preDeptId is NULL,a.sufDeptId,a.preDeptId) as preDeptId,
+		IF(a.preDeptName is NULL,a.sufDeptName,a.preDeptName) as preDeptName,
+		frd.routeDealType,
+		frd.query,a.uTime
+		FROM
+		(
+		SELECT
+		fr.flowId,
+		fis.routeId,
+		fis.uTime,
+		fr.routeName,
+		fr.preNode,
+		fr.sufNode,
+		fr.isBack,
+		fid.stateId,
+		fid.preId,
+		fid.preName,
+		fid.preDeptId,
+		fid.preDeptName,
+		fid.sufId,
+		fid.sufName,
+		fid.sufDeptId,
+		fid.sufDeptName
+		FROM
+		im_tf_instance_state fis
+		LEFT JOIN
+		im_tf_instance_deal fid ON
+		fis.id = fid.stateId
+		LEFT JOIN
+		im_tf_route fr ON fis.routeId =
+		fr.id
+		AND fr.del = 0
+		WHERE
+		fis.nodeId=#{nodeId} and fis.instanceId=#{instanceId} and
+		fis.sufDealId=#{sufDealId}
+		) a
+		LEFT JOIN im_tf_node
+		fn ON a.preNode
+		=
+		fn.id and fn.del=0
+		LEFT JOIN
+		im_tf_node fn1 ON a.sufNode = fn1.id
+		and
+		fn1.del=0
+		LEFT JOIN im_tf_route_deal frd ON a.routeId =
+		frd.routeId and
+		frd.del=0
+	</select>
+	<select id="listPreDealUsersForNodeId"
+		resultMap="BaseResultMap" parameterType="java.util.Map">
+		SELECT
+		a.flowId,
+		a.routeId as
+		preRouteId,
+		a.routeName as preRouteName,
+		a.sufNode AS preNodeId,
+		fn1.nodeName as preNodeName,
+		fn1.nodeType as preNodeType,
+		a.preNode as
+		sufNodeId,
+		fn.nodeName as
+		sufNodeName,
+		fn.nodeType as sufNodeType,
+		a.isBack as preRouteIsBack,
+		IF(a.preId is NULL,a.sufId,a.preId) as
+		preId,
+		IF(a.preName is NULL,a.sufName,a.preName) as preName,
+		IF(a.preDeptId is NULL,a.sufDeptId,a.preDeptId) as preDeptId,
+		IF(a.preDeptName is NULL,a.sufDeptName,a.preDeptName) as preDeptName,
+		frd.routeDealType,
+		frd.query,a.uTime
+		FROM
+		(
+		SELECT
+		fr.flowId,
+		fisl.routeId,
+		fr.routeName,
+		fr.preNode,
+		fr.sufNode,
+		fr.isBack,
+		fid.stateId,
+		fid.preId,
+		fid.preName,
+		fid.preDeptId,
+		fid.preDeptName,
+		fid.sufId,
+		fid.sufName,
+		fid.sufDeptId,
+		fid.sufDeptName,
+		fisl.flag,
+		fisl.uTime
+		FROM(
+		select
+		fis.id,fis.instanceId,fis.nodeId,fis.routeId, fis.uTime,0 as flag from
+		im_tf_instance_state fis WHERE fis.nodeId=#{nodeId} AND
+		fis.instanceId=#{instanceId} AND
+		fis.sufDealId=#{sufDealId}
+		UNION ALL
+		select fil.id,fil.instanceId,fil.nodeId,fil.routeId,fil.cTime as
+		uTime,1 as
+		flag from im_tf_instance_log fil WHERE
+		fil.instanceId=#{instanceId}) fisl
+		LEFT JOIN
+		im_tf_instance_deal fid ON
+		fisl.id = fid.stateId
+		LEFT JOIN
+		im_tf_route fr ON fisl.routeId = fr.id
+		AND fr.del = 0
+		) a
+		LEFT JOIN
+		im_tf_node
+		fn ON a.preNode = fn.id and
+		fn.del=0
+		LEFT JOIN
+		im_tf_node fn1 ON a.sufNode = fn1.id and fn1.del=0
+		LEFT JOIN
+		im_tf_route_deal frd ON a.routeId = frd.routeId and frd.del=0
+		ORDER BY a.flag,a.uTime DESC
+	</select>
+	<select id="getFlowInstanceDealByState"
+		resultMap="BaseResultMap" parameterType="java.lang.String">
+		select * from im_tf_instance_deal where stateId =
+		#{stateId,jdbcType=VARCHAR}
+	</select>
+</mapper>
